@@ -4,10 +4,13 @@ import { fileURLToPath } from "node:url";
 import express from "express";
 import { createApp } from "./app.js";
 import { loadConfig } from "./config.js";
+import { getPool } from "./db.js";
+import { createProvider } from "./llm/index.js";
 import { logger } from "./logger.js";
 
 const config = loadConfig();
-const app = createApp();
+if (!config.DATABASE_URL) logger.warn("DATABASE_URL is not set; /api/releases will return 503");
+const app = createApp({ pool: config.DATABASE_URL ? getPool(config.DATABASE_URL) : undefined, provider: createProvider(config) });
 
 // In production the built React app is served by this same server.
 const webDist = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../web/dist");

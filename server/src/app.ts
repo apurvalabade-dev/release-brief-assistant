@@ -1,8 +1,16 @@
 import express, { type ErrorRequestHandler } from "express";
+import type pg from "pg";
 import { ZodError } from "zod";
 import { logger } from "./logger.js";
+import type { LlmProvider } from "./llm/types.js";
+import { releaseRoutes } from "./routes/releases.js";
 
-export function createApp() {
+export interface AppDeps {
+  pool?: pg.Pool | undefined;
+  provider?: LlmProvider | undefined;
+}
+
+export function createApp(deps: AppDeps = {}) {
   const app = express();
   app.use(express.json({ limit: "1mb" }));
 
@@ -15,6 +23,14 @@ export function createApp() {
   app.get("/api/health", (_req, res) => {
     res.json({ status: "ok" });
   });
+
+  if (deps.pool) {
+    app.use("/api/releases", releaseRoutes(deps.pool, deps.provider));
+  } else {
+    app.use("/api/releases", (_req, res) => {
+      res.status(503).json({ error: "database_not_configured" });
+    });
+  }
 
   app.use("/api", (_req, res) => {
     res.status(404).json({ error: "not_found" });
