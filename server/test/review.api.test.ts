@@ -4,33 +4,25 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createApp } from "../src/app.js";
 import { MockProvider } from "../src/llm/mock.js";
 import type { LlmProvider } from "../src/llm/types.js";
-import { migrate } from "../src/migrate.js";
+import { setupTestDb, type TestDb } from "./db.js";
 import { goodPackage } from "./fixtures.js";
 
 const url = process.env["TEST_DATABASE_URL"];
-const schema = `rb_test_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
 
 describe.skipIf(!url)("review generation API (postgres)", () => {
-  let admin: pg.Pool;
+  let db: TestDb;
   let pool: pg.Pool;
   let app: ReturnType<typeof createApp>;
   const broken: LlmProvider = { name: "broken", completeJson: async () => ({ nonsense: true }) };
 
   beforeAll(async () => {
-    admin = new pg.Pool({ connectionString: url, max: 1 });
-    await admin.query(`CREATE SCHEMA ${schema}`);
-    pool = new pg.Pool({ connectionString: url, max: 5 });
-    pool.on("connect", (c) => void c.query(`SET search_path TO ${schema}`));
-    const c = await pool.connect();
-    await c.query(`SET search_path TO ${schema}`);
-    await migrate(c);
-    c.release();
+    db = await setupTestDb(url!);
+    pool = db.pool;
     app = createApp({ pool, provider: new MockProvider() });
   });
+
   afterAll(async () => {
-    await pool?.end();
-    await admin?.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
-    await admin?.end();
+    await db?.teardown();
   });
 
   const create = async (pkg: unknown = goodPackage()) => (await request(app).post("/api/releases").send({ name: "R", package: pkg })).body.release.id as number;

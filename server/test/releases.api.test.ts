@@ -2,38 +2,29 @@ import pg from "pg";
 import request from "supertest";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createApp } from "../src/app.js";
-import { migrate } from "../src/migrate.js";
+import { setupTestDb, type TestDb } from "./db.js";
 import { goodPackage } from "./fixtures.js";
 
 /**
  * Integration tests need a real Postgres: set TEST_DATABASE_URL.
- * Everything runs inside a throwaway schema that is dropped afterwards,
- * so it is safe to point this at a shared dev database.
+ * Everything runs inside a throwaway schema that is dropped afterwards.
+ * Use a DIRECT (non-pooled) connection string; the helper refuses pooled ones.
  */
 const url = process.env["TEST_DATABASE_URL"];
-const schema = `rb_test_${Date.now()}_${Math.floor(Math.random() * 1e6)}`;
 
 describe.skipIf(!url)("releases API (postgres)", () => {
-  let admin: pg.Pool;
+  let db: TestDb;
   let pool: pg.Pool;
   let app: ReturnType<typeof createApp>;
 
   beforeAll(async () => {
-    admin = new pg.Pool({ connectionString: url, max: 1 });
-    await admin.query(`CREATE SCHEMA ${schema}`);
-    pool = new pg.Pool({ connectionString: url, max: 10 });
-    pool.on("connect", (c) => void c.query(`SET search_path TO ${schema}`));
-    const c = await pool.connect();
-    await c.query(`SET search_path TO ${schema}`);
-    await migrate(c);
-    c.release();
+    db = await setupTestDb(url!);
+    pool = db.pool;
     app = createApp({ pool });
   });
 
   afterAll(async () => {
-    await pool?.end();
-    await admin?.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`);
-    await admin?.end();
+    await db?.teardown();
   });
 
   const create = (name = "Acme 2.4", pkg: unknown = goodPackage()) => request(app).post("/api/releases").send({ name, package: pkg });

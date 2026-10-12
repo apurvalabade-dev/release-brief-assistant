@@ -9,6 +9,7 @@
     "start": "npm run start -w server",
     "test": "npm test -w server",
     "typecheck": "npm run typecheck -w server && npm run typecheck -w web",
-    "migrate": "npm run migrate -w server"
+    "migrate": "npm run migrate -w server",
+    "smoke:llm": "npm run smoke:llm -w server"
   }
 }
