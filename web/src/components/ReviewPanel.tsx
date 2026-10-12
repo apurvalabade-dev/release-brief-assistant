@@ -2,9 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { api } from "../api";
 import { itemIndex } from "../items";
 import type { Audience, Checks, PackageDraft, Review, Statement } from "../types";
+import { AddStatement } from "./AddStatement";
 import { Badge, ErrorBox, Findings, when, type Tone } from "./ui";
 
 const statusTone: Record<Statement["status"], Tone> = { draft: "muted", approved: "ok", rejected: "bad" };
+const CHANGE_KINDS = new Set(["feature", "bug fix", "behaviour change"]);
 const AUDIENCE_LABEL: Record<Audience, string> = { internal: "Internal (technical)", stakeholder: "Stakeholders / clients" };
 
 interface Props {
@@ -68,6 +70,8 @@ export function ReviewPanel({ releaseId, versionNo, pkg, checks }: Props) {
   const statements = review?.statements.filter((s) => s.audience === audience) ?? [];
   const count = (st: Statement["status"]) => statements.filter((s) => s.status === st).length;
   const staleCount = statements.filter((s) => s.freshness !== "fresh").length;
+  const covered = new Set(statements.filter((s) => s.status !== "rejected").flatMap((s) => s.citations));
+  const uncovered = [...index.values()].filter((i) => CHANGE_KINDS.has(i.kind) && !covered.has(i.id));
 
   return (
     <div>
@@ -116,6 +120,15 @@ export function ReviewPanel({ releaseId, versionNo, pkg, checks }: Props) {
               <StatementCard key={s.id} s={s} index={index} releaseId={releaseId} versionNo={versionNo} onChange={replace} />
             ))}
           </ul>
+
+          <AddStatement
+            releaseId={releaseId}
+            versionNo={versionNo}
+            audience={audience}
+            items={[...index.values()]}
+            uncovered={uncovered}
+            onAdded={(st) => setReview((r) => (r ? { ...r, statements: [...r.statements, st] } : r))}
+          />
 
           <button className="ghost" onClick={() => generate(true)} disabled={busy}>
             Regenerate drafts
