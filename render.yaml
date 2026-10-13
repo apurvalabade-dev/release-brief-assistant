@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: release-brief-assistant
+    runtime: node
+    plan: free
+    region: singapore          # match your Neon region (check the region name against Render's list)
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: node server/dist/migrate.js && node server/dist/index.js
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: LLM_PROVIDER
+        value: gemini
+      - key: GEMINI_MODEL
+        value: gemini-3.8-flash
+      - key: DATABASE_URL
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
