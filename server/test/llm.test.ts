@@ -111,8 +111,9 @@ describe("generateReview failure handling", () => {
     const { provider, calls } = flaky((req, n) => (req.task === "summarize" && n === 2 ? { statements: [{ section: "change", text: "x", citations: ["NOPE-1"] }] } : undefined));
     const r = await generateReview(provider, pkg, checks);
     expect(r.statements.length).toBeGreaterThan(0);
-    const retry = calls.filter((c) => c.task === "summarize")[1]!;
-    expect(retry.user).toContain('cites unknown item "NOPE-1"');
+    // The summaries now run concurrently, so find the retry by its content, not by call position.
+    const retry = calls.find((c) => c.task === "summarize" && c.user.includes('cites unknown item "NOPE-1"'));
+    expect(retry).toBeDefined();
   });
 
   it("fails with GenerationError if the answer stays invalid", async () => {

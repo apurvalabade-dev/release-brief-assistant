@@ -89,7 +89,7 @@ export function ReviewPanel({ releaseId, versionNo, pkg, checks }: Props) {
           </p>
           <div className="row">
             <button onClick={() => generate(false)} disabled={busy || !checks.ready}>
-              {busy ? "Generating…" : "Generate summaries"}
+              {busy ? "Generating… this can take a minute or two" : "Generate summaries"}
             </button>
             {versionNo > 1 && (
               <button className="ghost" onClick={carryOver} disabled={busy}>

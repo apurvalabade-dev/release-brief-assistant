@@ -7,6 +7,7 @@ const RULES = `Rules:
 - Respond with a single JSON object and nothing else (no markdown fences, no commentary).
 - Only cite item ids that appear in the provided items list. Never invent ids.
 - Never say a change is tested, verified, stable or safe unless a cited QA item has result "pass" and covers it.
+- Never restate an unsupported or weakly evidenced claim as fact in a "change" statement. Describe only what the evidence supports, and put the unverified claim in a "risk" statement.
 - You cannot approve, publish or deploy a release, and must never say that a release is approved.`;
 
 function context(pkg: NormalizedPackage, items: PackageItem[], findings: CheckFinding[]): string {

@@ -7,7 +7,7 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().min(1).optional(),
   ANTHROPIC_MODEL: z.string().min(1).default("claude-sonnet-5-5"),
   GEMINI_API_KEY: z.string().min(1).optional(),
-  GEMINI_MODEL: z.string().min(1).default("gemini-2.5-flash"),
+  GEMINI_MODEL: z.string().min(1).default("gemini-3.8-flash"),
   LLM_TIMEOUT_MS: z.coerce.number().int().positive().default(60_000),
   /** Extra attempts after a 429/5xx from the provider (0 disables retries). */
   LLM_RETRIES: z.coerce.number().int().min(0).max(3).default(1),
