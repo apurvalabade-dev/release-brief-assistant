@@ -183,4 +183,4 @@ agent.md             guidance for AI coding agents and how AI was used to build 
 
 ## AI-assisted development
 
-This project was built with AI coding assistance (Claude). Its guarantees were verified by running the test suites against a real PostgreSQL database and by breaking them on purpose to confirm tests fail, not by trusting the generated code. See [agent.md](agent.md) for the working rules and what was found and fixed along the way.
+This project was built with AI coding assistance (Claude) and Chatgpt. Its guarantees were verified by running the test suites against a real PostgreSQL database and by breaking them on purpose to confirm tests fail, not by trusting the generated code. See [agent.md](agent.md) for the working rules and what was found and fixed along the way.
